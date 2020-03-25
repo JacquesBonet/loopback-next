@@ -559,6 +559,15 @@ children:
     url: Update-generator.html
     output: 'web, pdf'
 
+- title: 'Working with data'
+  url: Working-with-data.html
+  output: 'web, pdf'
+  children:
+
+  - title: 'Querying data'
+    url: Querying-data.html
+    output: 'web, pdf'
+
 - title: 'Connectors reference'
   url: Connectors-reference.html
   output: 'web'
@@ -880,3 +889,4 @@ children:
   - title: 'Considerations for GDPR readiness'
     url: Deploy-for-GDPR-readiness.html
     output: 'web, pdf'
+    
