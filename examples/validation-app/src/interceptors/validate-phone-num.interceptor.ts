@@ -72,14 +72,11 @@ export class ValidatePhoneNumInterceptor implements Provider<Interceptor> {
   isAreaCodeValid(phoneNum: string, city: string): Boolean {
     // add some dummy logic here
     const areaCode: string = phoneNum.slice(0, 3);
-    if (
-      !(
-        city.toLowerCase() === 'toronto' &&
-        (areaCode === '416' || areaCode === '647')
-      )
-    )
-      return false;
 
+    if (city.toLowerCase() === 'toronto') {
+      if (areaCode === '416' || areaCode === '647') return true;
+      else return false;
+    }
     // it always returns true for now
     return true;
   }

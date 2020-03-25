@@ -3,7 +3,7 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {Client} from '@loopback/testlab';
+import {Client, expect} from '@loopback/testlab';
 import {ValidationApplication} from '../..';
 import {setupApplication} from './test-helper';
 
@@ -55,6 +55,12 @@ describe('validate properties', () => {
       phoneNum: '999-111-1111',
       capacity: 10,
     };
-    await client.post('/coffee-shops').send(invalidAreaCodeCS).expect(422);
+    const response = await client
+      .post('/coffee-shops')
+      .send(invalidAreaCodeCS)
+      .expect(422);
+
+    // with customized response
+    expect(response.body).to.have.property('resolution');
   });
 });
