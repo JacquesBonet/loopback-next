@@ -565,7 +565,32 @@ children:
   children:
 
   - title: 'Querying data'
-    url: Querying-data.html
+  url: Querying-data.html
+  output: 'web, pdf'
+  children:
+
+  - title: 'Fields filter'
+    url: Fields-filter.html
+    output: 'web, pdf'
+
+  - title: 'Include filter'
+    url: Include-filter.html
+    output: 'web, pdf'
+
+  - title: 'Limit filter'
+    url: Limit-filter.html
+    output: 'web, pdf'
+
+  - title: 'Order filter'
+    url: Order-filter.html
+    output: 'web, pdf'
+
+  - title: 'Skip filter'
+    url: Skip-filter.html
+    output: 'web, pdf'
+
+  - title: 'Where filter'
+    url: Where-filter.html
     output: 'web, pdf'
 
 - title: 'Connectors reference'
@@ -889,4 +914,3 @@ children:
   - title: 'Considerations for GDPR readiness'
     url: Deploy-for-GDPR-readiness.html
     output: 'web, pdf'
-    
