@@ -1,0 +1,10 @@
+{
+  "ids": {
+    "User": 1
+  },
+  "models": {
+    "User": {
+      "1": "{\"email\":\"dplojbdiuc_1585460374@tfbnw.net\",\"name\":{},\"id\":1}"
+    }
+  }
+}

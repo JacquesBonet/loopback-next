@@ -1,0 +1,13 @@
+extends ../layouts/layout
+
+block content
+  .row
+    .col-md-12
+      h1 Login:
+      ul.list-inline.list-unstyled
+        li
+          a.btn.btn-primary(href="/api/auth/oauth2-facebook") Login with Facebook
+        li
+          a.btn.btn-primary(href="/api/auth/oauth2-google") Login with Google
+        li
+          a.btn.btn-primary(href="/api/auth/oauth2-twitter") Login with Twitter
