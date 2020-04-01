@@ -1,9 +1,6 @@
-import {Provider} from '@loopback/core';
-import {HandlerContext, HttpErrors, Reject} from '@loopback/rest';
+import {HandlerContext, HttpErrors, RejectProvider} from '@loopback/rest';
 
-export class MyValidationErrorProvider implements Provider<Reject> {
-  constructor() {}
-
+export class MyValidationErrorProvider extends RejectProvider {
   value() {
     // Use the lambda syntax to preserve the "this" scope for future calls!
     return (response: HandlerContext, result: Error) => {
@@ -29,7 +26,6 @@ export class MyValidationErrorProvider implements Provider<Reject> {
         response.status(422).send(JSON.stringify(newError));
       }
     }
-
-    response.status(httpError.statusCode).end(JSON.stringify(httpError));
+    super.action({request, response}, error);
   }
 }

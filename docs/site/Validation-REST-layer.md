@@ -192,10 +192,11 @@ as an example, here is how the Provider class look like:
 {% include code-caption.html content="/src/providers/my-validation-error-provider.ts" %}
 
 ```ts
-import {Provider} from '@loopback/core';
-import {HandlerContext, HttpErrors, Reject} from '@loopback/rest';
-export class MyValidationErrorProvider implements Provider<Reject> {
-  //...
+import {HandlerContext, HttpErrors, RejectProvider} from '@loopback/rest';
+
+export class MyValidationErrorProvider extends RejectProvider {
+  // ...
+
   action({request, response}: HandlerContext, error: Error) {
     // handle the error and send back the error response
     // "response" is an Express Response object
@@ -204,7 +205,6 @@ export class MyValidationErrorProvider implements Provider<Reject> {
     if (request.url === '/coffee-shops') {
       // if this is a validation error
       if (httpError.statusCode === 422) {
-        // you can customize the error message and status code here
         const newError = {
           message: 'My customized validation error message',
           code: 'VALIDATION_FAILED',
@@ -215,8 +215,7 @@ export class MyValidationErrorProvider implements Provider<Reject> {
         response.status(422).send(JSON.stringify(newError));
       }
     }
-
-    response.status(httpError.statusCode).end(JSON.stringify(httpError));
+    super.action({request, response}, error);
   }
 }
 ```
