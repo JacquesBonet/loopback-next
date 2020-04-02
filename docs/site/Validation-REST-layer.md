@@ -178,44 +178,73 @@ of 10 digits separated by `-` after the 3rd and 6th digits.
 
 ## Customize validation errors
 
-Since the error is being caught at the REST layer, the best way to customize the
-errors is to
-[customize the sequence of actions](https://loopback.io/doc/en/lb4/Sequence.html#customizing-sequence-actions)
-using a
-[Provider](https://loopback.io/doc/en/lb4/apidocs.context.provider.html).
+Since the error is being caught at the REST layer, the simplest way to customize
+the errors is to customize the
+[sequnce](https://loopback.io/doc/en/lb4/Sequence.html). It exists in all
+LoopBack applications scaffolded by using the `lb4` command and can be found in
+`src/sequence.ts`.
 
-To do so, create a Provider class in `src/providers` folder that implements
-`Provider<Reject>`. Using the
-[validation-app](https://github.com/strongloop/loopback-next/tree/master/examples/validation-app)
-as an example, here is how the Provider class look like:
+Let's take a closer look at how to customize the error. A few things to note in
+the below code snippet:
 
-{% include code-caption.html content="/src/providers/my-validation-error-provider.ts" %}
+1. inject RestBindings.ERROR_WRITER_OPTIONS for logging error
+2. customize error for particular endpoints
+3. create a new error with customized properties
+4. log the error using RestBindings.SequenceActions.LOG_ERROR
+
+{% include code-caption.html content="/src/sequence.ts" %}
 
 ```ts
-import {HandlerContext, HttpErrors, RejectProvider} from '@loopback/rest';
+// 1. inject RestBindings.ERROR_WRITER_OPTIONS for logging error
+constructor(
+    @inject(SequenceActions.FIND_ROUTE) protected findRoute: FindRoute,
+    @inject(SequenceActions.PARSE_PARAMS) protected parseParams: ParseParams,
+    @inject(SequenceActions.INVOKE_METHOD) protected invoke: InvokeMethod,
+    @inject(SequenceActions.SEND) public send: Send,
+    @inject(SequenceActions.REJECT) public reject: Reject,
+    @inject(RestBindings.ERROR_WRITER_OPTIONS, {optional: true})
+    protected errorWriterOptions?: ErrorWriterOptions,
+  ) {}
 
-export class MyValidationErrorProvider extends RejectProvider {
-  // ...
+async handle(context: RequestContext) {
+    try {
+      //...
+    } catch (err) {
+      const httpError = <HttpErrors.HttpError>err;
+      // 2. customize error for particular endpoint
+      if (context.request.url === '/coffee-shops') {
+        // if this is a validation error
+        if (httpError.statusCode === 422) {
+          const customizedMessage = 'My customized validation error message';
+          const customizedProps = {
+            resolution: 'Contact your admin for troubleshooting.',
+            code: 'VALIDATION_FAILED',
+          };
 
-  action({request, response}: HandlerContext, error: Error) {
-    // handle the error and send back the error response
-    // "response" is an Express Response object
-    response.setHeader('Content-Type', 'application/json');
-    const httpError = <HttpErrors.HttpError>error;
-    if (request.url === '/coffee-shops') {
-      // if this is a validation error
-      if (httpError.statusCode === 422) {
-        const newError = {
-          message: 'My customized validation error message',
-          code: 'VALIDATION_FAILED',
-          resolution: 'Contact your admin for troubleshooting.',
-        };
+          // 3. Create a new error with customized properties
+          // you can change the status code here too
+          const newError: HttpErrors.HttpError = createHttpErrors(
+            422,
+            customizedMessage,
+            customizedProps,
+          );
+          context.response.status(422).send(newError);
 
-        // you can change the status code here too
-        response.status(422).send(JSON.stringify(newError));
+          // 4. log the error using RestBindings.SequenceActions.LOG_ERROR
+          writeErrorToResponse(
+            newError,
+            context.request,
+            context.response,
+            this.errorWriterOptions,
+          );
+
+          // The error was handled
+          return;
+        }
       }
+
+      // Otherwise fall back to the default error handler
+      this.reject(context, err);
     }
-    super.action({request, response}, error);
   }
-}
 ```

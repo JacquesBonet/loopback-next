@@ -60,7 +60,6 @@ export class ValidatePhoneNumInterceptor implements Provider<Interceptor> {
       const err: ValidationError = new ValidationError(
         'Area code and city do not match',
       );
-      // change the error status code to 400 - "Bad Request"
       err.statusCode = 400;
       throw err;
     }
@@ -74,10 +73,9 @@ export class ValidatePhoneNumInterceptor implements Provider<Interceptor> {
     // add some dummy logic here
     const areaCode: string = phoneNum.slice(0, 3);
 
-    if (city.toLowerCase() === 'toronto') {
-      if (areaCode === '416' || areaCode === '647') return true;
-      else return false;
-    }
+    if (city.toLowerCase() === 'toronto')
+      return areaCode === '416' || areaCode === '647';
+
     // it always returns true for now
     return true;
   }
