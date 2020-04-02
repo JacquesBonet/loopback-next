@@ -292,6 +292,9 @@ export class Application extends Context implements LifeCycleObserver {
     this.assertNotInProcess('start');
     // No-op if it's started
     if (this._state === 'started') return;
+    if (this._state === 'stopped') {
+      this.registerSignalListener();
+    }
     this.setState('starting');
     this.setupShutdown();
 
@@ -310,6 +313,11 @@ export class Application extends Context implements LifeCycleObserver {
   public async stop(): Promise<void> {
     if (this._state === 'stopping') return this.awaitState('stopped');
     this.assertNotInProcess('stop');
+    if (!this._isShuttingDown) {
+      // Explicit stop is called, let's remove signal listeners to avoid
+      // memory leak and max listener warning
+      this.removeSignalListener();
+    }
     // No-op if it's created or stopped
     if (this._state !== 'started') return;
     this.setState('stopping');
