@@ -3,9 +3,9 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import debugFactory from 'debug';
+import debugFactory, {Debugger} from 'debug';
 import {EventEmitter} from 'events';
-import {v1 as uuidv1} from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import {Binding, BindingInspectOptions, BindingTag} from './binding';
 import {
   ConfigurationResolver,
@@ -77,6 +77,11 @@ export class Context extends EventEmitter {
   protected configResolver: ConfigurationResolver;
 
   /**
+   * A debug function which can be overridden by subclasses
+   */
+  protected _debug?: Debugger;
+
+  /**
    * Create a new context.
    *
    * @example
@@ -116,7 +121,7 @@ export class Context extends EventEmitter {
   }
 
   private generateName() {
-    const id = uuidv1();
+    const id = uuidv4();
     let prefix = `${this.constructor.name}-`;
     if (prefix === 'Context-') prefix = '';
     return `${prefix}${id}`;
@@ -135,14 +140,15 @@ export class Context extends EventEmitter {
    * as the prefix
    * @param args - Arguments for the debug
    */
-  private _debug(...args: unknown[]) {
+  protected debugWithName(...args: unknown[]) {
+    const debugFn = this._debug ?? debug;
     /* istanbul ignore if */
-    if (!debug.enabled) return;
+    if (!debugFn.enabled) return;
     const formatter = args.shift();
     if (typeof formatter === 'string') {
-      debug(`[%s] ${formatter}`, this.name, ...args);
+      debugFn(`[%s] ${formatter}`, this.name, ...args);
     } else {
-      debug('[%s] ', this.name, formatter, ...args);
+      debugFn('[%s] ', this.name, formatter, ...args);
     }
   }
 
@@ -184,7 +190,7 @@ export class Context extends EventEmitter {
    */
   add(binding: Binding<unknown>): this {
     const key = binding.key;
-    this._debug('[%s] Adding binding: %s', key);
+    this.debugWithName('[%s] Adding binding: %s', key);
     let existingBinding: Binding | undefined;
     const keyExists = this.registry.has(key);
     if (keyExists) {
@@ -340,7 +346,7 @@ export class Context extends EventEmitter {
    * @returns true if the binding key is found and removed from this context
    */
   unbind(key: BindingAddress): boolean {
-    this._debug('Unbind %s', key);
+    this.debugWithName('Unbind %s', key);
     key = BindingKey.validate(key);
     const binding = this.registry.get(key);
     // If not found, return `false`
@@ -378,7 +384,7 @@ export class Context extends EventEmitter {
    * which is created per request.
    */
   close() {
-    this._debug('Closing context...');
+    this.debugWithName('Closing context...');
     this.subscriptionManager.close();
     this.tagIndexer.close();
   }
@@ -577,7 +583,7 @@ export class Context extends EventEmitter {
     keyWithPath: BindingAddress<ValueType>,
     optionsOrSession?: ResolutionOptionsOrSession,
   ): Promise<ValueType | undefined> {
-    this._debug('Resolving binding: %s', keyWithPath);
+    this.debugWithName('Resolving binding: %s', keyWithPath);
     return this.getValueOrPromise<ValueType | undefined>(
       keyWithPath,
       optionsOrSession,
@@ -645,7 +651,7 @@ export class Context extends EventEmitter {
     keyWithPath: BindingAddress<ValueType>,
     optionsOrSession?: ResolutionOptionsOrSession,
   ): ValueType | undefined {
-    this._debug('Resolving binding synchronously: %s', keyWithPath);
+    this.debugWithName('Resolving binding synchronously: %s', keyWithPath);
 
     const valueOrPromise = this.getValueOrPromise<ValueType>(
       keyWithPath,
