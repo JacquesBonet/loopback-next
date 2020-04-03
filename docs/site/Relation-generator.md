@@ -90,8 +90,8 @@ The tool will prompt you for:
 - **Name of the `target` model.** _(targetModel)_ Prompts a list of available
   models to choose from as the target model of the relation.
 
-- **Name of the `foreign key`.** _(relationName)_ Prompts a property name that
-  references the primary key property of the another model. Note: Leave blank to
+- **Name of the `foreign key`.** _(relationName)_ Prompts a target model property name that
+  references the source model primary key. Note: Leave blank to
   use the default.
 
   Default values: `<foreignKeyName>` + `Id` in camelCase, e.g `categoryId`
