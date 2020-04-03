@@ -4,6 +4,8 @@
 // License text available at https://opensource.org/licenses/MIT
 
 import {expect} from '@loopback/testlab';
+import {Debugger} from 'debug';
+import {format} from 'util';
 import {
   Binding,
   BindingCreationPolicy,
@@ -44,14 +46,14 @@ describe('Context constructor', () => {
   it('generates uuid name if not provided', () => {
     const ctx = new Context();
     expect(ctx.name).to.match(
-      /^[0-9A-F]{8}-[0-9A-F]{4}-[1][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+      /^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
     );
   });
 
   it('adds subclass name as the prefix', () => {
     const ctx = new TestContext();
     expect(ctx.name).to.match(
-      /^TestContext-[0-9A-F]{8}-[0-9A-F]{4}-[1][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+      /^TestContext-[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
     );
   });
 
@@ -188,7 +190,10 @@ describe('Context', () => {
     });
 
     it('cannot unbind a locked binding', () => {
-      ctx.bind('foo').to('a').lock();
+      ctx
+        .bind('foo')
+        .to('a')
+        .lock();
       expect(() => ctx.unbind('foo')).to.throw(
         `Cannot unbind key "foo" of a locked binding`,
       );
@@ -828,6 +833,30 @@ describe('Context', () => {
     });
   });
 
+  describe('debugWithName', () => {
+    it('allows override of debug from subclasses', () => {
+      let debugOutput = '';
+      const myDebug = (formatter: string, ...args: unknown[]) => {
+        debugOutput = format(formatter, ...args);
+      };
+      myDebug.enabled = true;
+      class MyContext extends Context {
+        constructor() {
+          super('my-context');
+          this._debug = myDebug as Debugger;
+        }
+
+        debug(formatter: string, ...args: unknown[]) {
+          this.debugWithName(formatter, ...args);
+        }
+      }
+
+      const myCtx = new MyContext();
+      myCtx.debug('%s %d', 'number of bindings', 10);
+      expect(debugOutput).to.eql(`[${myCtx.name}] number of bindings 10`);
+    });
+  });
+
   describe('toJSON() and inspect()', () => {
     beforeEach(setupBindings);
 
@@ -1022,13 +1051,19 @@ describe('Context', () => {
     }
 
     function setupBindings() {
-      ctx.bind('a').to('1').lock();
+      ctx
+        .bind('a')
+        .to('1')
+        .lock();
       ctx
         .bind('b')
         .toDynamicValue(() => 2)
         .inScope(BindingScope.SINGLETON)
         .tag('X', 'Y');
-      ctx.bind('c').to(3).tag('Z', {a: 1});
+      ctx
+        .bind('c')
+        .to(3)
+        .tag('Z', {a: 1});
 
       ctx.bind('d').toClass(MyService);
       ctx.bind('e').toProvider(MyServiceProvider);
